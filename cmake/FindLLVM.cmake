@@ -39,6 +39,8 @@ foreach(v RANGE 7 17)
     # names like llvm-config-7.0 llvm-config70 llvm-config-7 llvm-config-7-64
     list(PREPEND llvm_config_names llvm-config-${v}.0 llvm-config${v}0 llvm-config-${v} llvm-config-${v}-64)
 endforeach()
+message("LLVM_CONFIG")
+message(${LLVM_CONFIG})
 find_program(LLVM_CONFIG
     NAMES ${llvm_config_names}
     PATHS ${LLVM_ROOT_DIR}/bin NO_DEFAULT_PATH

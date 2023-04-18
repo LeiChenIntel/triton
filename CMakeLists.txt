@@ -54,8 +54,13 @@ endif()
 ##########
 # LLVM
 ##########
+message("check point 1")
+message("check point 1")
+message("check point 1")
 if (NOT MLIR_DIR)
+    message("NOT MLIR_DIR")
   if(NOT LLVM_LIBRARY_DIR)
+      message("LLVM_LIBRARY_DIR")
     if(WIN32)
       find_package(LLVM 13 REQUIRED COMPONENTS nvptx amdgpu)
 
@@ -68,6 +73,7 @@ if (NOT MLIR_DIR)
         AMDGPUInfo AMDGPUcodegen
       )
     else()
+        message("check point 2")
       find_package(LLVM 11 REQUIRED COMPONENTS "nvptx;amdgpu")
     endif()
     message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
@@ -78,6 +84,7 @@ if (NOT MLIR_DIR)
     endif()
   # sometimes we don't want to use llvm-config, since it may have been downloaded for some specific linux distros
   else()
+      message(${LLVM_LIBRARY_DIR})
     set(LLVM_LDFLAGS "-L${LLVM_LIBRARY_DIR}")
     set(LLVM_LIBRARIES
       libLLVMNVPTXCodeGen.a

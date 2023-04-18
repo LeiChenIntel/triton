@@ -20,6 +20,7 @@ void registerTestMembarPass();
 } // namespace mlir
 
 int main(int argc, char **argv) {
+    printf("triton-opt start\n");
   mlir::registerAllPasses();
   mlir::registerTritonPasses();
   mlir::registerTritonGPUPasses();

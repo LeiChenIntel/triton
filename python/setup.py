@@ -74,6 +74,7 @@ def get_llvm_package_info():
 
 
 def get_thirdparty_packages(triton_cache_path):
+    print(triton_cache_path)
     packages = [get_pybind11_package_info(), get_llvm_package_info()]
     thirdparty_cmake_args = []
     for p in packages:
@@ -102,6 +103,7 @@ def get_thirdparty_packages(triton_cache_path):
 
 
 def download_and_copy_ptxas():
+    print("download_and_copy_ptxas")
     base_dir = os.path.dirname(__file__)
     src_path = "bin/ptxas"
     url = "https://conda.anaconda.org/nvidia/label/cuda-12.0.0/linux-64/cuda-nvcc-12.0.76-0.tar.bz2"
@@ -177,6 +179,7 @@ class CMakeBuild(build_ext):
             "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON",
             "-DPYTHON_INCLUDE_DIRS=" + python_include_dir,
         ]
+        print("lit dir " + lit_dir)
         if lit_dir is not None:
             cmake_args.append("-DLLVM_EXTERNAL_LIT=" + lit_dir)
         cmake_args.extend(thirdparty_cmake_args)
