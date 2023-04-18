@@ -1529,6 +1529,7 @@ arg_type_pattern = {
 
 # def compile(fn, signature: str, device: int = -1, constants=dict(), num_warps: int = 4, num_stages: int = 3, extern_libs=None, configs=None):
 def compile(fn, **kwargs):
+    print(fn)
     capability = kwargs.get("cc", None)
     if capability is None:
         device = torch.cuda.current_device()
@@ -1544,6 +1545,7 @@ def compile(fn, **kwargs):
     num_stages = kwargs.get("num_stages", 3 if capability >= 75 else 2)
     extern_libs = kwargs.get("extern_libs", dict())
     # build compilation stages
+    print("# build compilation stages")
     stages = {
         "ast": (lambda path: fn, None),
         "ttir": (lambda path: parse_mlir_module(path, context),

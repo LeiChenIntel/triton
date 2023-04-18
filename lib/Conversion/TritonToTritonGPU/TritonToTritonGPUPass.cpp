@@ -674,6 +674,8 @@ public:
   ConvertTritonToTritonGPU(int numWarps) { this->numWarps = numWarps; }
 
   void runOnOperation() override {
+      printf("TritonToTritonGPU\n");
+      printf("runOnOperation()\n");
     MLIRContext *context = &getContext();
     ModuleOp mod = getOperation();
     // type converter

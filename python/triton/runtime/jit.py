@@ -289,6 +289,7 @@ def {self.fn.__name__}({', '.join(self.arg_names)}, grid, num_warps=4, num_stage
                  "self": self, "_spec_of": self._spec_of, "_key_of": self._key_of,
                  "cache": self.cache, "triton": triton, "torch": torch}
         exec(src, scope)
+        print(self.fn.__name__)
         return scope[self.fn.__name__]
 
     def __init__(self, fn, version=None, do_not_specialize=None):
