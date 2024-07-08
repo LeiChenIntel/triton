@@ -280,7 +280,8 @@ class CMakeBuild(build_ext):
             build_args += ["--", "/m"]
         else:
             cmake_args += ["-DCMAKE_BUILD_TYPE=" + cfg]
-            max_jobs = os.getenv("MAX_JOBS", str(2 * os.cpu_count()))
+            max_cpu = min(20, 2 * os.cpu_count())
+            max_jobs = os.getenv("MAX_JOBS", str(max_cpu))
             build_args += ['-j' + max_jobs]
 
         if check_env_flag("TRITON_BUILD_WITH_CLANG_LLD"):
