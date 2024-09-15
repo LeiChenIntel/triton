@@ -266,6 +266,8 @@ class Mark:
     def _run(self, bench: Benchmark, save_path: str, show_plots: bool, print_data: bool, diff_col=False, **kwrags):
         import os
 
+        import matplotlib
+        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
         import pandas as pd
         y_mean = bench.line_names
