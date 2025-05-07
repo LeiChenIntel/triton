@@ -561,6 +561,7 @@ class JITFunction(KernelInterface[T]):
         ]
 
     def run(self, *args, grid, warmup, **kwargs):
+        print("JITFunction run:")
         kwargs["debug"] = kwargs.get("debug", False) or os.environ.get("TRITON_DEBUG", "0") == "1"
 
         # parse options
@@ -620,6 +621,7 @@ class JITFunction(KernelInterface[T]):
                 return None
             # compile the kernel
             src = self.ASTSource(self, signature, constants, configs[0])
+            print("JITFunction compile")
             kernel = self.compile(
                 src,
                 target=target,

@@ -382,6 +382,7 @@ class CUDABackend(BaseBackend):
         return cubin
 
     def add_stages(self, stages, options):
+        print("compiler.py nvidia backend add_stages:")
         stages["ttir"] = lambda src, metadata: self.make_ttir(src, metadata, options)
         stages["ttgir"] = lambda src, metadata: self.make_ttgir(src, metadata, options, self.capability)
         stages["llir"] = lambda src, metadata: self.make_llir(src, metadata, options, self.capability)

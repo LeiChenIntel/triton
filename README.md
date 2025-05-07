@@ -55,8 +55,54 @@ python -m venv .venv --prompt triton;
 source .venv/bin/activate;
 
 pip install ninja cmake wheel pybind11; # build-time dependencies
-pip install -e python
+export MAX_JOBS=18 # set up job number
+pip install -e python # or use pip install -e python -v to print more logs
 ```
+
+- Triton cache is under `/home/usr-name/.triton`.
+- The default build path is under `./triton/python/build`.
+
+CMake arguments to build project are dumped as,
+```cmake
+-G Ninja
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DLLVM_ENABLE_WERROR=ON
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=./triton/python/triton/_C
+-DTRITON_BUILD_TUTORIALS=OFF
+-DTRITON_BUILD_PYTHON_MODULE=ON
+-DPython3_EXECUTABLE:FILEPATH=./triton/.venv/bin/python3
+-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+-DPYTHON_INCLUDE_DIRS=/usr/include/python3.10
+-DTRITON_CODEGEN_BACKENDS=nvidia;amd
+-DLLVM_EXTERNAL_LIT=./triton/.venv/bin/lit
+-DLLVM_INCLUDE_DIRS=./.triton/llvm/llvm-86b69c31-ubuntu-x64/include
+-DLLVM_LIBRARY_DIR=./.triton/llvm/llvm-86b69c31-ubuntu-x64/lib
+-DCMAKE_BUILD_TYPE=TritonRelBuildWithAsserts
+-DJSON_INCLUDE_DIR=./.triton/json//include
+-DPYBIND11_INCLUDE_DIR=/tmp/pip-build-env-z5hbwu9c/overlay/lib/python3.10/site-packages/pybind11/include
+# set path to ./triton/.venv/lib/python3.10/site-packages/pybind11/include, do not use /tmp/..
+-DCUPTI_INCLUDE_DIR=./triton/third_party/nvidia/backend/include
+-DCUPTI_LIB_DIR=./triton/third_party/nvidia/backend/lib/cupti
+-DROCTRACER_INCLUDE_DIR=./triton/third_party/amd/backend/include
+```
+
+By using these args, IDE can help to construct the project.
+
+Need to rerun `pip install -e python` if changes in python code are not applied. Changes should be integrated into
+virtual environment, and then they can take effect.
+
+# Run test case
+```
+cd triton
+pip install -e './python[tutorials]'
+pip install torch
+cd python/tutorials/
+TRITON_ALWAYS_COMPILE=1 MLIR_ENABLE_DUMP=1 python 01-vector-add.py > log
+```
+https://triton-lang.org/main/getting-started/tutorials/index.html
+
+- Set `TRITON_ALWAYS_COMPILE=1` to compile kernel each time.
+- Set `MLIR_ENABLE_DUMP=1` to dump IRs.
 
 # Building with a custom LLVM
 

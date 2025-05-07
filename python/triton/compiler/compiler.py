@@ -215,9 +215,11 @@ def filter_traceback(e: BaseException):
 
 
 def compile(src, target=None, options=None):
+    print("compiler.py compile:")
     if target is None:
         target = driver.active.get_current_target()
     assert isinstance(target, GPUTarget), "target must be of GPUTarget type"
+    print("Target:", target.backend)
     backend = make_backend(target)
     ir_source = not isinstance(src, ASTSource)
     # create backend
@@ -275,7 +277,9 @@ def compile(src, target=None, options=None):
         filter_traceback(e)
         raise
     use_ir_loc = os.environ.get("USE_IR_LOC", None)
+    print("compilation process")
     for ext, compile_ir in list(stages.items())[first_stage:]:
+        # compilation process
         next_module = compile_ir(module, metadata)
         ir_filename = f"{file_name}.{ext}"
         if (fn_override_manager is not None and (full_name := fn_override_manager.get_file(ir_filename)) is not None):
@@ -290,6 +294,9 @@ def compile(src, target=None, options=None):
             next_module.create_location_snapshot(ir_full_name)
             print(f"Creating new locations for {ir_full_name}")
         module = next_module
+        print("ext: ", ext)
+        print("------------------")
+        print(module)
     # write-back metadata
     metadata_group[metadata_filename] = fn_cache_manager.put(json.dumps(metadata, default=vars), metadata_filename,
                                                              binary=False)
@@ -350,6 +357,7 @@ class CompiledKernel:
     def __init__(self, src, metadata_group, hash):
         from collections import namedtuple
         metadata_path = next((Path(p) for c, p in metadata_group.items() if c.endswith(".json")))
+        print("metadata_path:", metadata_path)
         metadata = json.loads(metadata_path.read_text())
         metadata['cluster_dims'] = tuple(metadata['cluster_dims'])
         # JSON serialization dumps the target as a dict. Restore it to a GPUTarget.
