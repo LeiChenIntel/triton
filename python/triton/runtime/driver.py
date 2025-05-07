@@ -56,5 +56,10 @@ class DriverConfig:
     def reset_active(self):
         self.active = self.default
 
+    def set_active_to_xpu(self):
+        if "xpu" not in backends:
+            raise RuntimeError("XPU backend is unavailable")
+        self.active = backends["xpu"].driver()
+
 
 driver = DriverConfig()
