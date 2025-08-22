@@ -307,7 +307,11 @@ def compile(src, target=None, options=None):
     # lead to child crash or hang.
     context.disable_multithreading()
     # return handle to compiled kernel
-    return CompiledKernel(src, metadata_group, hash)
+
+    # MLIR compilation end. Now it is packed into binary.
+    # TODO: A None return is added here to temporarily disable the runtime execution.
+    return None
+    # return CompiledKernel(src, metadata_group, hash)
 
 
 def make_backend(target):

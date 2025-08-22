@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from types import ModuleType
 from typing import Any, Dict, Optional, Tuple
 
-from triton._C.libtriton import xpu
+from triton._C.libtriton import xpu, ir, passes
 from triton.backends.compiler import BaseBackend, GPUTarget
 
 print("xpu backend compiler")
@@ -14,7 +14,8 @@ print("xpu backend compiler")
 @dataclass(frozen=True)
 class XPUOptions:
     debug: bool = False
-    backend_name: str = 'xpu'
+    cluster_dims: tuple = (1, 1, 1)
+    backend_name: str = "xpu"
 
     def hash(self):
         hash_dict = dict(self.__dict__)
@@ -30,7 +31,7 @@ class XPUBackend(BaseBackend):
 
     def __init__(self, target: tuple) -> None:
         super().__init__(target)
-        self.name = "xpu"
+        self.binary_ext = "so"  # This is a fake extension to enable pipeline
 
     def parse_options(self, opts) -> Any:
         return XPUOptions()
@@ -42,11 +43,35 @@ class XPUBackend(BaseBackend):
     def load_dialects(self, ctx):
         return
 
+    def pack_metadata(self, metadata):
+        return metadata
+
+    def get_codegen_implementation(self):
+        return
+
+    @staticmethod
+    def make_ttir(mod, metadata, opt):
+        pm = ir.pass_manager(mod.context)
+        pm.enable_debug()
+        passes.common.add_inliner(pm)
+        passes.ttir.add_rewrite_tensor_pointer(pm)
+        passes.ttir.add_combine(pm)
+        passes.common.add_canonicalizer(pm)
+        passes.ttir.add_reorder_broadcast(pm)
+        passes.common.add_cse(pm)
+        passes.common.add_licm(pm)
+        passes.common.add_symbol_dce(pm)
+        passes.ttir.add_loop_unroll(pm)
+        pm.run(mod)
+        metadata["name"] = "xpu_kernel"
+        return mod
+
     def add_stages(self, stages, options):
         # Add the processing stages for the XPU backend
         # Triton -> TritonXPU -> Lower assembly
         # Pass interfaces are implemented in the triton_xpu.cc.
         print("Adding stages for XPU backend")
+        stages["ttir"] = lambda src, metadata: self.make_ttir(src, metadata, options)
         return
 
     @functools.lru_cache()

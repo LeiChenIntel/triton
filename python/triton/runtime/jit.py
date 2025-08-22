@@ -630,6 +630,9 @@ class JITFunction(KernelInterface[T]):
             self.cache[device][key] = kernel
             self._call_hook(key, signature, device, constants, options, configs, warmup, before=False)
 
+        # TODO: A None return is added here to temporarily disable the runtime execution.
+        return None
+
         # Check that used global values have not changed.
         not_present = object()
         for (name, _), (val, globals_dict) in self.used_global_vals.items():
