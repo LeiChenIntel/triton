@@ -6,6 +6,7 @@ import torch
 import triton
 import triton.language as tl
 
+
 @triton.jit
 def copy_kernel(x_ptr, output_ptr):
     x = tl.load(x_ptr, mask=True)
@@ -25,5 +26,5 @@ torch.manual_seed(0)
 size = 64
 
 triton.runtime.driver.set_active_to_xpu()
-x = torch.rand(size, device='xpu')
+x = torch.rand(size, device='cpu')
 output = copy(x, None)
