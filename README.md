@@ -91,6 +91,23 @@ By using these args, IDE can help to construct the project.
 Need to rerun `pip install -e python` if changes in python code are not applied. Changes should be integrated into
 virtual environment, and then they can take effect.
 
+Key commit:
+
+Stage 2:
+Compilation pipeline is enabled to Triton IR for XPU.
+By running `python 00-copy-xpu.py`, IR is dumped as
+```mlir
+module {
+  tt.func public @copy_kernel(%arg0: !tt.ptr<f32> {tt.divisibility = 16 : i32} loc("/home/leichen1/develop/triton-origin/triton/python/tutorials/00-copy-xpu.py":11:0), %arg1: !tt.ptr<f32> {tt.divisibility = 16 : i32} loc("/home/leichen1/develop/triton-origin/triton/python/tutorials/00-copy-xpu.py":11:0)) attributes {noinline = false} {
+    %true = arith.constant true loc(#loc1)
+    %0 = tt.load %arg0, %true : !tt.ptr<f32> loc(#loc2)
+    tt.store %arg1, %0, %true : !tt.ptr<f32> loc(#loc3)
+    tt.return loc(#loc4)
+  } loc(#loc)
+} loc(#loc)
+#loc1 = loc(unknown)
+```
+
 # Run test case
 ```
 cd triton
