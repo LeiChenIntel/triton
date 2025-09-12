@@ -1076,6 +1076,20 @@ void init_triton_ir(py::module &&m) {
               PropagateNan propagateNan) -> Value {
              return Value(self.create<ClampFOp>(input, min, max, propagateNan));
            })
+      .def("create_conv",
+           [](TritonOpBuilder &self, Value &input, Value &weight) -> Value {
+             input.dump();
+             weight.dump();
+             const auto outputElementType =
+                 Float32Type::get(self.getBuilder().getContext());
+             // auto outputType =
+             //     mlir::RankedTensorType::get({1, 16, 1, 1}, outputElementType);
+             auto outputType = input.getType();
+             // outputType.dump();
+             auto r = self.create<ConvOp>(outputType, input, weight);
+             r.dump();
+             return r;
+           })
       .def("create_precise_sqrt",
            [](TritonOpBuilder &self, Value &input) -> Value {
              return Value(self.create<PreciseSqrtOp>(input));
@@ -1248,16 +1262,21 @@ void init_triton_ir(py::module &&m) {
            [](TritonOpBuilder &self, Value &ptrs, Value &mask,
               std::optional<Value> &other, CacheModifier cacheModifier,
               EvictionPolicy evictionPolicy, bool isVolatile) -> Value {
-             return self.create<LoadOp>(ptrs, mask, other.value_or(Value()),
+             auto r =  self.create<LoadOp>(ptrs, mask, other.value_or(Value()),
                                         cacheModifier, evictionPolicy,
                                         isVolatile);
+             r.dump();
+             return r;
            })
       .def("create_masked_store",
            [](TritonOpBuilder &self, Value &ptrs, Value &val, Value &mask,
               CacheModifier cacheModifier,
               EvictionPolicy evictionPolicy) -> void {
-             self.create<StoreOp>(ptrs, val, mask, cacheModifier,
+             ptrs.dump();
+             val.dump();
+             auto r = self.create<StoreOp>(ptrs, val, mask, cacheModifier,
                                   evictionPolicy);
+             r.dump();
            })
       .def("create_descriptor_load",
            [](TritonOpBuilder &self, Value desc_ptr,
