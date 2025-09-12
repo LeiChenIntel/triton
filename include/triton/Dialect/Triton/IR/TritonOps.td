@@ -630,6 +630,37 @@ def TT_GetNumProgramsOp : TT_Op<"get_num_programs", [Pure]> {
 }
 
 //
+// Conv Op
+//
+def TT_ConvOp : TT_Op<"conv", []> {
+    let summary = "conv";
+
+    let description = [{
+        $output = conv($input, $filter)
+    }];
+
+    let arguments = (ins
+        TT_Tensor:$input,
+        TT_Tensor:$filter
+      // AnyTypeOf<[TT_PtrLike, TT_TensorPtr, TT_Tensor]>:$input,
+      // AnyTypeOf<[TT_PtrLike, TT_TensorPtr, TT_Tensor]>:$filter
+    );
+
+    let results = (outs
+      // TT_Tensor:$output
+      TT_Tensor:$output
+    );
+
+    let assemblyFormat = [{
+        `(`
+            $input `,`
+            $filter
+        `)`
+        attr-dict `:` type(operands) `->` type(results)
+    }];
+}
+
+//
 // Dot Op
 //
 def TT_DotOp : TT_Op<"dot", [Pure,

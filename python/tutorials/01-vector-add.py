@@ -70,7 +70,7 @@ def add(x: torch.Tensor, y: torch.Tensor):
     #  - Each torch.tensor object is implicitly converted into a pointer to its first element.
     #  - `triton.jit`'ed functions can be indexed with a launch grid to obtain a callable GPU kernel.
     #  - Don't forget to pass meta-parameters as keywords arguments.
-    add_kernel[grid](x, y, output, n_elements, BLOCK_SIZE=1024)
+    add_kernel[grid](x, y, output, n_elements, BLOCK_SIZE=1)
     # We return a handle to z but, since `torch.cuda.synchronize()` hasn't been called, the kernel is still
     # running asynchronously at this point.
     return output
@@ -80,6 +80,7 @@ def add(x: torch.Tensor, y: torch.Tensor):
 # We can now use the above function to compute the element-wise sum of two `torch.tensor` objects and test its correctness:
 
 torch.manual_seed(0)
+triton.runtime.driver.set_active_to_gpu()
 size = 98432
 x = torch.rand(size, device='cuda')
 y = torch.rand(size, device='cuda')

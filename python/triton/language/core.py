@@ -1989,6 +1989,13 @@ def clamp(x, min, max, propagate_nan: constexpr = PropagateNan.NONE, _builder=No
     return semantic.clamp(x, min, max, propagate_nan, _builder)
 
 
+@builtin
+def conv(input, weight, _builder=None):
+    input = semantic.to_tensor(input, _builder)
+    weight = semantic.to_tensor(weight, _builder)
+    return semantic.conv(input, weight, _builder)
+
+
 # -----------------------
 # Reductions
 # -----------------------

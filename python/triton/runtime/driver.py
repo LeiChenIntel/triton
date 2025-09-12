@@ -62,5 +62,9 @@ class DriverConfig:
             raise RuntimeError("XPU backend is unavailable")
         self.active = backends["xpu"].driver()
 
+    def set_active_to_gpu(self):
+        print("set active to nvidia gpu")
+        self.active = backends["nvidia"].driver()
+
 
 driver = DriverConfig()
