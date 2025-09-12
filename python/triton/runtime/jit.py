@@ -631,7 +631,8 @@ class JITFunction(KernelInterface[T]):
             self._call_hook(key, signature, device, constants, options, configs, warmup, before=False)
 
         # TODO: A None return is added here to temporarily disable the runtime execution.
-        return None
+        if target.backend == "xpu":
+            return None
 
         # Check that used global values have not changed.
         not_present = object()

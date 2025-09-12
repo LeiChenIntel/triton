@@ -403,6 +403,13 @@ def clamp(x: tl.tensor, min: tl.tensor, max: tl.tensor, propagate_nan: tl.Propag
         raise TypeError(f"Unexpected dtype {dtype}. Only floating point clamp is supported")
 
 
+def conv(input: tl.tensor, weight: tl.tensor, builder: ir.builder):
+    dtype1 = input.dtype
+    print(dtype1)
+    tmp = builder.create_conv(input.handle, weight.handle)
+    return tl.tensor(tmp, input.type)
+
+
 ##############
 # bitwise ops
 ##############

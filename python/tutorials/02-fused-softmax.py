@@ -110,6 +110,7 @@ def softmax_kernel(output_ptr, input_ptr, input_row_stride, output_row_stride, n
 # %%
 # We can create a helper function that enqueues the kernel and its (meta-)arguments for any given input tensor.
 
+triton.runtime.driver.set_active_to_gpu()
 device = torch.cuda.current_device()
 properties = driver.active.utils.get_device_properties(device)
 NUM_SM = properties["multiprocessor_count"]
