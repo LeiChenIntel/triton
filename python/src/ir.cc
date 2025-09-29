@@ -1082,9 +1082,9 @@ void init_triton_ir(py::module &&m) {
              weight.dump();
              const auto outputElementType =
                  Float32Type::get(self.getBuilder().getContext());
-             auto outputType =
-                 mlir::RankedTensorType::get({1, 16, 1, 1}, outputElementType);
-             // auto outputType = input.getType();
+             // auto outputType =
+             //     mlir::RankedTensorType::get({1, 16, 1, 1}, outputElementType);
+             auto outputType = input.getType();
              // outputType.dump();
              auto r = self.create<ConvOp>(outputType, input, weight);
              r.dump();
