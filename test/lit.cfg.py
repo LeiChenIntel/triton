@@ -46,13 +46,19 @@ config.test_source_root = os.path.dirname(__file__)
 config.test_exec_root = os.path.join(config.triton_obj_root, 'test')
 config.triton_tools_dir = os.path.join(config.triton_obj_root, 'bin')
 config.filecheck_dir = os.path.join(config.triton_obj_root, 'bin', 'FileCheck')
+config.python_test_dir = os.path.join(config.triton_src_root, 'python', 'tutorials')
+print(config.test_exec_root)
+print(config.triton_tools_dir)
+print(config.filecheck_dir)
+print(config.python_test_dir)
 
 # FileCheck -enable-var-scope is enabled by default in MLIR test
 # This option avoids to accidentally reuse variable across -LABEL match,
 # it can be explicitly opted-in by prefixing the variable name with $
 config.environment["FILECHECK_OPTS"] = "--enable-var-scope"
+config.substitutions.append(("%python_test_path", config.python_test_dir))
 
-tool_dirs = [config.triton_tools_dir, config.llvm_tools_dir, config.filecheck_dir]
+tool_dirs = [config.triton_tools_dir, config.llvm_tools_dir, config.filecheck_dir, config.python_test_dir]
 
 # Tweak the PATH to include the tools dir.
 for d in tool_dirs:

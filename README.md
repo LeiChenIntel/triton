@@ -216,6 +216,21 @@ $ ctest -j32
 $ lit test
 ```
 
+Dumped logs for `ctest -j32`:
+```txt
+100% tests passed, 0 tests failed out of 163
+
+Total Test time (real) =   0.32 sec
+```
+
+Dumped logs for `lit test`:
+```txt
+Testing Time: 3.05s
+
+Total Discovered Tests: 81
+  Passed: 81 (100.00%)
+```
+
 You may find it helpful to make a symlink to the builddir and tell your local
 git to ignore it.
 
