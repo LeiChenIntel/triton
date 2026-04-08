@@ -1,3 +1,42 @@
+### LLVM Notes
+
+LIT CHECK labels definitions:
+* CHECK: 
+  - Matches lines in order — each CHECK must appear after the previous one in the output
+  - Strict sequential matching
+```text
+// CHECK: %[[CST:.*]] = arith.constant dense<0.000000e+00> : tensor<128x32xf16>
+// CHECK: %[[EXTSI0:.*]] = arith.extsi ...   ← must appear AFTER CST
+```
+
+* CHECK-DAG:
+    - Matches lines in any order within a DAG group (consecutive CHECK-DAG lines)
+    - Useful for constants/definitions that may be reordered by the compiler (e.g., CSE, canonicalization)
+    - A CHECK-DAG group ends when a non-CHECK-DAG directive is encountered
+```text
+// CHECK-DAG: %[[C0_I32:.*]] = arith.constant 0 : i32
+// CHECK-DAG: %[[C1_I64:.*]] = arith.constant 1 : i64
+// CHECK-DAG: %[[C128_I64:.*]] = arith.constant 128 : i64  ← these 3 can appear in any order
+// CHECK: %[[CST:.*]] = ...   ← this must appear AFTER all the DAG matches above
+```
+
+* CHECK-SAME:
+    - Matches content on the same line as the previous CHECK/CHECK-SAME
+    - Used to verify multiple patterns on a single output line, like function signatures
+```text
+// CHECK-LABEL: tt.func public @rewrite_for(
+// CHECK-SAME:     %[[ARG0:[a-zA-Z0-9_]+]]: !tt.ptr<f16>   ← same line as above
+// CHECK-SAME:     %[[ARG1:[a-zA-Z0-9_]+]]: !tt.ptr<f16>   ← still same line
+```
+| Directive    | Order                          | Line Behavior                        |
+|--------------|--------------------------------|--------------------------------------|
+| `CHECK`      | Sequential                     | New line                             |
+| `CHECK-DAG`  | Any order (within group)       | New line                             |
+| `CHECK-SAME` | N/A (continues previous match) | Same line as previous CHECK/CHECK-SAME |
+
+
+### Triton Notes
+
 The relation between grid and pid
 
 Grid defines the total number of parallel programs
