@@ -50,6 +50,7 @@ Need to rerun `pip install -e .` if changes in python code are not applied. Chan
 virtual environment, and then they can take effect.
 
 # Run test case
+### Tutorial cases
 ```
 cd triton
 pip install -e './python[tutorials]'
@@ -68,3 +69,30 @@ UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
   plt.show()
 ```
 Require to install UI `pip install PyQt5`
+
+### Unit tests and LIT tests
+```shell
+# One-time setup.  Note this will reinstall local Triton because torch
+# overwrites it with the public version.
+$ make dev-install
+
+# Run Python tests using your local GPU.
+$ python3 -m pytest python/test/unit
+
+# Move to builddir.  Fill in <...> with the full path, e.g.
+# `cmake.linux-x86_64-cpython-3.11`.
+$ cd python/build/cmake<...>
+
+# Run C++ unit tests.
+$ ctest -j32
+
+# Run lit tests.
+$ lit test
+```
+Dumped logs:
+```text
+Testing Time: 1.67s
+
+Total Discovered Tests: 213
+  Passed: 213 (100.00%)
+```
