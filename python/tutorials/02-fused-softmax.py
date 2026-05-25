@@ -81,12 +81,30 @@ def naive_softmax(x):
 # memory operations properly if we want to handle any possible input shapes:
 
 
+# The softmax kernel is launched with 1 grid of num_programs thread blocks.
+# Each thread block (program) handles a subset of rows, striding through the data.
+# Grid (1D, num_programs blocks)
+# ├── Block 0: processes rows 0, num_programs, 2*num_programs, ...
+# ├── Block 1: processes rows 1, num_programs+1, 2*num_programs+1, ...
+# ├── Block 2: processes rows 2, num_programs+2, 2*num_programs+2, ...
+# └── ...
 @triton.jit
 def softmax_kernel(output_ptr, input_ptr, input_row_stride, output_row_stride, n_rows, n_cols, BLOCK_SIZE: tl.constexpr,
                    num_stages: tl.constexpr):
     # starting row of the program
     row_start = tl.program_id(0)
     row_step = tl.num_programs(0)
+    # In the each iteration, the program (thread block) will process 1 row.
+    # Load all the row values from input_ptrs with mask.
+    # Mask size is larger than n_cols. Then only index with values are loaded.
+
+    # This hides memory latency: while the GPU is computing softmax for row i, it's already loading rows i+1, i+2, i+3
+    # from DRAM into SMEM buffers.
+    # Iteration:  0    1    2    3    4    5    6    7  ...
+    # Load:       L0   L1   L2   L3   L4   L5   L6   L7  ← always 4 ahead
+    # Compute:                        C0   C1   C2   C3  ← starts after 4 loads
+    # So each kernel requires more memory with increasing of num_stages
+    # size_smem ≈ BLOCK_SIZE * element_size * num_stages
     for row_idx in tl.range(row_start, n_rows, row_step, num_stages=num_stages):
         # The stride represents how much we need to increase the pointer to advance 1 row
         row_start_ptr = input_ptr + row_idx * input_row_stride
@@ -109,6 +127,21 @@ def softmax_kernel(output_ptr, input_ptr, input_row_stride, output_row_stride, n
         tl.store(output_ptrs, softmax_output, mask=mask)
 
 
+# Although num_stages is set. Softmax is a memory bound workload.
+# It is possible that the gap between compute process and load process is more and more close at the end of the pipeline.
+# Fill phase (startup): Only loads, no compute yet:
+# Iteration:  0    1    2    3
+# Load:       L0   L1   L2   L3
+# Compute:    -    -    -    -
+# Steady state: Load and compute overlap (load stays ahead)
+# Iteration:  4    5    6    7
+# Load:       L4   L5   L6   L7
+# Compute:    C0   C1   C2   C3
+# Drain phase (end): No more rows to load, compute catches up and closes the gap
+# Iteration:  n-3  n-2  n-1   n
+# Load:       -    -    -    -    ← no more data
+# Compute:    Cn-3 Cn-2 Cn-1 Cn  ← finishes remaining buffered rows
+
 # %%
 # We can create a helper function that enqueues the kernel and its (meta-)arguments for any given input tensor.
 
@@ -125,6 +158,7 @@ def softmax(x):
     n_rows, n_cols = x.shape
 
     # The block size of each loop iteration is the smallest power of two greater than the number of columns in `x`
+    # BLOCK_SIZE is 1024 for 781 cols.
     BLOCK_SIZE = triton.next_power_of_2(n_cols)
 
     # Another trick we can use is to ask the compiler to use more threads per row by
@@ -164,7 +198,14 @@ def softmax(x):
         max_num_waves = MAX_NUM_THREADS // WARP_SIZE
         occupancy = min(NUM_GPRS // WARP_SIZE // n_regs, max_num_waves) // num_warps
     else:
+        # n_regs counts VGPRs (Vector General Purpose Registers) — the registers used for per-thread data in GPU kernels.
+        # total VGPRs consumed = n_regs (per thread) × WARP_SIZE × num_warps
+        # That's also why increasing num_stages increases register pressure — more pipeline buffers = more VGPRs per thread.
         occupancy = NUM_REGS // (n_regs * WARP_SIZE * num_warps)
+    # SIZE_SMEM represents the total shared memory available per multi-processor (SM). Note that this is a memory size
+    # for SM but not thread block. Usually the max shared memory per block is almost the same as the max shared memory per SM.
+    # size_smem is the amount of shared memory used by each block. Here it seems to be the size of 1 row data.
+    # Then SIZE_SMEM // size_smem compute how many programs (thread blocks) can be applied on 1 SM.
     occupancy = min(occupancy, SIZE_SMEM // size_smem)
     num_programs = NUM_SM * occupancy
 
