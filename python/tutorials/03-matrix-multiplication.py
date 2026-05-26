@@ -253,6 +253,12 @@ def matmul_kernel(
     # Map program ids `pid` to the block of C it should compute.
     # This is done in a grouped ordering to promote L2 data reuse.
     # See above `L2 Cache Optimizations` section for details.
+    # Several block-rows in matrix A will be computed one by one to avoid data spilling,
+    # because they use the same block-column in matrix B. Within a group, multiple block-rows of A share the same
+    # block-columns of B. By computing them consecutively, the B blocks loaded into L2 cache are reused across those
+    # GROUP_SIZE_M block-rows before moving to the next column — avoiding redundant loads from global memory.
+    # Computation still happens in block level, but group size will decide the number of block-rows computed consecutively.
+    # It is related to the scheduling process.
     pid = tl.program_id(axis=0)
     num_pid_m = tl.cdiv(M, BLOCK_SIZE_M)
     num_pid_n = tl.cdiv(N, BLOCK_SIZE_N)
@@ -287,7 +293,11 @@ def matmul_kernel(
     offs_bn = (pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)) % N
     offs_k = tl.arange(0, BLOCK_SIZE_K)
     a_ptrs = a_ptr + (offs_am[:, None] * stride_am + offs_k[None, :] * stride_ak)
+    # a_ptrs is a 2D block of pointers with shape [BLOCK_SIZE_M, BLOCK_SIZE_K] —
+    # each entry points to one element in the corresponding block of matrix A.
     b_ptrs = b_ptr + (offs_k[:, None] * stride_bk + offs_bn[None, :] * stride_bn)
+    # b_ptrs is a 2D block of pointers with shape [BLOCK_SIZE_K, BLOCK_SIZE_N] —
+    # each entry points to one element in the corresponding block of matrix B.
 
     # -----------------------------------------------------------
     # Iterate to compute a block of the C matrix.
